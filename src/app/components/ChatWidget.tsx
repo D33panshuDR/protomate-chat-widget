@@ -30,6 +30,7 @@ const ProtomateChatWidget: React.FC<ChatBoxProps> = ({ botName }) => {
   const [userInput, setUserInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isContextRequired, setIsContextRequired] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const handleUserInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,7 +49,7 @@ const ProtomateChatWidget: React.FC<ChatBoxProps> = ({ botName }) => {
         },
       ]);
       setUserInput("");
-      const { reponse } = await generate(userInput);
+      const { reponse } = await generate(userInput, isContextRequired, setIsContextRequired);
 
         setMessages((messages) => [
             ...messages,
