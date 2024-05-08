@@ -10,6 +10,20 @@ type message = {
     content : string
 }
 
+let messages : message[] = [
+    
+    {
+        "role" : "user",
+        "content" : "Hi there"
+      },
+      {
+        "role" : "assistant",
+        "content" : "Hi there! How can I assist you today?"
+      }
+  ]; 
+
+let flag = true;
+
 
 const generateSemantics = async (query : string) => {
     const res = await axios.post(
@@ -48,23 +62,10 @@ const generateSemantics = async (query : string) => {
 
 };
 
-export async function generate(input: string, isContextRequired, setIsContextRequired) {
+export async function generate(input: string) {
   'use server';
-
-  let messages : message[] = [
-    
-        {
-            "role" : "user",
-            "content" : "Hi there"
-          },
-          {
-            "role" : "assistant",
-            "content" : "Hi there! How can I assist you today?"
-          }
-      ];
   
 
-  let flag = isContextRequired;
   let generatedText = "";
 
   const stream = createStreamableValue('');
@@ -82,7 +83,7 @@ export async function generate(input: string, isContextRequired, setIsContextReq
     content : `Question: ${input.trim()}`
   })
 
-  setIsContextRequired(false)
+  flag = false;
 
 
   (async () => {
@@ -96,8 +97,35 @@ export async function generate(input: string, isContextRequired, setIsContextReq
 
     for await (const delta of textStream) {
       stream.update(delta);
-      console.log(delta)
       generatedText = generatedText + delta
+    }
+
+    if(generatedText.includes("NO CONTEXT") || generatedText.includes("No context")) {
+        stream.update("Searching for new context ... \n");
+
+        const context = await generateSemantics(input.trim());
+        messages.push({
+            role : "user",
+            content : `Context: ${context}`
+        })
+
+
+        const { textStream } = await streamText({
+            model: openai('gpt-3.5-turbo'),
+            system: "You are a helpful AI search assistant for IISER Bhopal(a university) students.You are provided with a conversation history until now. Use the following pieces of context to answer the question at the end. If answer isn't in the context, say NO CONTEXT FOUND, don't try to make up an answer.  ANSWER IN BULLET POINTS!.",
+            messages: messages,
+            maxTokens: 256,
+            temperature: 0.5
+          });
+
+          generatedText = ""
+      
+          for await (const delta of textStream) {
+            stream.update(delta);
+            generatedText = generatedText + delta
+          }
+
+
     }
 
     stream.done();

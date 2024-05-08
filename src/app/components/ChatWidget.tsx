@@ -49,7 +49,7 @@ const ProtomateChatWidget: React.FC<ChatBoxProps> = ({ botName }) => {
         },
       ]);
       setUserInput("");
-      const { reponse } = await generate(userInput, isContextRequired, setIsContextRequired);
+      const { reponse } = await generate(userInput);
 
         setMessages((messages) => [
             ...messages,
