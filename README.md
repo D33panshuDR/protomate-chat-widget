@@ -1,5 +1,5 @@
 # protomate-chat-widget
-- [c] next js migration
-- [] langchain testing
-- [] crossplatform integration
+- [x] next js migration
+- [ ] langchain testing
+- [ ] crossplatform integration
 - 
